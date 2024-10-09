@@ -102,7 +102,7 @@ def read_fastq(fastq_file: Path) -> Iterator[str]:
     :param fastq_file: (Path) Path to the fastq file.
     :return: A generator object that iterate the read sequences.
     """
-    with open(fastq_file, "r") as f:
+    with open(fastq_file, "r", encoding="utf-8") as f:
         f.readline()
         # Read from the second line
         for line in f:
@@ -133,11 +133,12 @@ def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
     :return: A dictionnary object that identify all kmer occurrences.
     """
     kmer_dict = {}
-    # For each kmer, increment dict
     for read in read_fastq(fastq_file):
         for kmer in cut_kmer(read, kmer_size):
+            # Create key if doesn't exist
             if kmer not in kmer_dict:
                 kmer_dict[kmer] = 1
+            # For each kmer, increment dict
             else:
                 kmer_dict[kmer] += 1
     return kmer_dict
@@ -149,7 +150,13 @@ def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
     :param kmer_dict: A dictionnary object that identify all kmer occurrences.
     :return: A directed graph (nx) of all kmer substring and weight (occurrence).
     """
-    pass
+    graph = DiGraph()
+    for kmer in kmer_dict:
+        prefix = kmer[:-1]
+        suffix = kmer[1:]
+        weight = kmer_dict[kmer]
+        graph.add_edge(prefix, suffix, weight=weight)
+    return graph
 
 
 def remove_paths(
@@ -249,7 +256,13 @@ def get_starting_nodes(graph: DiGraph) -> List[str]:
     :param graph: (nx.DiGraph) A directed graph object
     :return: (list) A list of all nodes without predecessors
     """
-    pass
+    starting_nodes = []
+    # Iterate on nodes
+    for node in graph.nodes:
+        # Keep node if no predecessors
+        if list(graph.predecessors(node)) == []:
+            starting_nodes.append(node)
+    return starting_nodes
 
 
 def get_sink_nodes(graph: DiGraph) -> List[str]:
@@ -325,11 +338,16 @@ def main() -> None:  # pragma: no cover
     fastq_file = args.fastq_file
     output_file = args.output_file
     kmer_size = args.kmer_size
-    
+
     # Build k-mer dictionnary
     kmer_dict = build_kmer_dict(fastq_file, kmer_size)
-    print(kmer_dict)
+    # Build graph
+    graph = build_graph(kmer_dict)
     
+    starting_nodes = get_starting_nodes(graph)
+    print(starting_nodes)
+    
+
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
