@@ -296,8 +296,9 @@ def get_contigs(
             # Generate all paths between each start and end node couple
             for path in all_simple_paths(graph, start_node, end_node):
                 # Take first node and last letter of each other node
-                contig = path[0] + "".join([seq[-1] for seq in path])
-                contigs.append(contig)
+                contig_seq = path[0] + "".join([seq[-1] for seq in path[1:]])
+                contig_len = len(contig_seq)
+                contigs.append((contig_seq, contig_len))
     return contigs
                 
 
@@ -307,7 +308,10 @@ def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     :param contig_list: (list) List of [contiguous sequence and their length]
     :param output_file: (Path) Path to the output file
     """
-    pass
+    with open(output_file, "w", encoding="utf-8") as f:
+        for i in range(len(contigs_list)):
+            f.write(f">contig_{i+1} len={contigs_list[i][1]}\n")
+            f.write(f"{contigs_list[i][0]}\n")
 
 
 def draw_graph(graph: DiGraph, graphimg_file: Path) -> None:  # pragma: no cover
@@ -361,7 +365,8 @@ def main() -> None:  # pragma: no cover
     starting_nodes = get_starting_nodes(graph)
     sink_nodes = get_sink_nodes(graph)
     contigs = get_contigs(graph, starting_nodes, sink_nodes)
-    print(contigs)
+    # Save contig info in output file
+    save_contigs(contigs, output_file)
     
 
 
