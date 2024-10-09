@@ -290,8 +290,16 @@ def get_contigs(
     :param ending_nodes: (list) A list of nodes without successors
     :return: (list) List of [contiguous sequence and their length]
     """
-    pass
-
+    contigs = []
+    for start_node, end_node in zip(starting_nodes, ending_nodes):
+        if has_path(graph, start_node, end_node):
+            # Generate all paths between each start and end node couple
+            for path in all_simple_paths(graph, start_node, end_node):
+                # Take first node and last letter of each other node
+                contig = path[0] + "".join([seq[-1] for seq in path])
+                contigs.append(contig)
+    return contigs
+                
 
 def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     """Write all contigs in fasta format
@@ -349,10 +357,11 @@ def main() -> None:  # pragma: no cover
     kmer_dict = build_kmer_dict(fastq_file, kmer_size)
     # Build graph
     graph = build_graph(kmer_dict)
-    
+    # Calculate contigs
     starting_nodes = get_starting_nodes(graph)
     sink_nodes = get_sink_nodes(graph)
-    print(sink_nodes)
+    contigs = get_contigs(graph, starting_nodes, sink_nodes)
+    print(contigs)
     
 
 
