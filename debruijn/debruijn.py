@@ -102,8 +102,16 @@ def read_fastq(fastq_file: Path) -> Iterator[str]:
     :param fastq_file: (Path) Path to the fastq file.
     :return: A generator object that iterate the read sequences.
     """
-    pass
-
+    with open(fastq_file, "r") as f:
+        f.readline()
+        # read from the second line
+        for line in f:
+            yield line.strip()
+            # skip the next 3 lines
+            for _ in range(3):
+                f.readline()
+        
+        
 
 def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
     """Cut read into kmers of size kmer_size.
@@ -287,6 +295,12 @@ def draw_graph(graph: DiGraph, graphimg_file: Path) -> None:  # pragma: no cover
     plt.savefig(graphimg_file.resolve())
 
 
+
+
+
+
+
+
 # ==============================================================
 # Main program
 # ==============================================================
@@ -296,6 +310,14 @@ def main() -> None:  # pragma: no cover
     """
     # Get arguments
     args = get_arguments()
+    fastq_file = args.fastq_file
+    output_file = args.output_file
+    kmer_size = args.kmer_size
+    
+    # Read fastq file
+    seqs = list(read_fastq(fastq_file))
+    print(seqs)
+    
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
