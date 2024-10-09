@@ -104,14 +104,13 @@ def read_fastq(fastq_file: Path) -> Iterator[str]:
     """
     with open(fastq_file, "r") as f:
         f.readline()
-        # read from the second line
+        # Read from the second line
         for line in f:
             yield line.strip()
-            # skip the next 3 lines
+            # Skip the next 3 lines
             for _ in range(3):
                 f.readline()
-        
-        
+
 
 def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
     """Cut read into kmers of size kmer_size.
@@ -119,7 +118,11 @@ def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
     :param read: (str) Sequence of a read.
     :return: A generator object that provides the kmers (str) of size kmer_size.
     """
-    pass
+    read_len = len(read)
+    for i in range(read_len):
+        if i + kmer_size > read_len:
+            break
+        yield read[i:i+kmer_size]
 
 
 def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
@@ -316,7 +319,9 @@ def main() -> None:  # pragma: no cover
     
     # Read fastq file
     seqs = list(read_fastq(fastq_file))
-    print(seqs)
+    for seq in seqs:
+        kmers = list(cut_kmer(seq, kmer_size))
+        print(kmers)
     
 
     # Fonctions de dessin du graphe
