@@ -271,7 +271,13 @@ def get_sink_nodes(graph: DiGraph) -> List[str]:
     :param graph: (nx.DiGraph) A directed graph object
     :return: (list) A list of all nodes without successors
     """
-    pass
+    sink_nodes = []
+    # Iterate on nodes
+    for node in graph.nodes:
+        # Keep node if no successors
+        if list(graph.successors(node)) == []:
+            sink_nodes.append(node)
+    return sink_nodes
 
 
 def get_contigs(
@@ -345,7 +351,8 @@ def main() -> None:  # pragma: no cover
     graph = build_graph(kmer_dict)
     
     starting_nodes = get_starting_nodes(graph)
-    print(starting_nodes)
+    sink_nodes = get_sink_nodes(graph)
+    print(sink_nodes)
     
 
 
