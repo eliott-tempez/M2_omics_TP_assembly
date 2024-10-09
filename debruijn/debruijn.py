@@ -174,7 +174,15 @@ def remove_paths(
     :param delete_sink_node: (boolean) True->We remove the last node of a path
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    print(path_list)
+    if not delete_entry_node:
+        path_list = [path[1:] for path in path_list]
+    if not delete_sink_node:
+        path_list = [path[:-1] for path in path_list]
+    print(path_list)
+    for path in path_list:
+        graph.remove_nodes_from(path)
+    return graph
 
 
 def select_best_path(
@@ -291,14 +299,15 @@ def get_contigs(
     :return: (list) List of [contiguous sequence and their length]
     """
     contigs = []
-    for start_node, end_node in zip(starting_nodes, ending_nodes):
-        if has_path(graph, start_node, end_node):
-            # Generate all paths between each start and end node couple
-            for path in all_simple_paths(graph, start_node, end_node):
-                # Take first node and last letter of each other node
-                contig_seq = path[0] + "".join([seq[-1] for seq in path[1:]])
-                contig_len = len(contig_seq)
-                contigs.append((contig_seq, contig_len))
+    for start_node in starting_nodes:
+        for end_node in ending_nodes:
+            if has_path(graph, start_node, end_node):
+                # Generate all paths between each start and end node couple
+                for path in all_simple_paths(graph, start_node, end_node):
+                    # Take first node and last letter of each other node
+                    contig_seq = path[0] + "".join([seq[-1] for seq in path[1:]])
+                    contig_len = len(contig_seq)
+                    contigs.append((contig_seq, contig_len))
     return contigs
                 
 
@@ -310,7 +319,7 @@ def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     """
     with open(output_file, "w", encoding="utf-8") as f:
         for i in range(len(contigs_list)):
-            f.write(f">contig_{i+1} len={contigs_list[i][1]}\n")
+            f.write(f">contig_{i} len={contigs_list[i][1]}\n")
             f.write(f"{contigs_list[i][0]}\n")
 
 
@@ -367,6 +376,11 @@ def main() -> None:  # pragma: no cover
     contigs = get_contigs(graph, starting_nodes, sink_nodes)
     # Save contig info in output file
     save_contigs(contigs, output_file)
+    
+        
+    
+    
+    
     
 
 
