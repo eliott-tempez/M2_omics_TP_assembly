@@ -174,12 +174,10 @@ def remove_paths(
     :param delete_sink_node: (boolean) True->We remove the last node of a path
     :return: (nx.DiGraph) A directed graph object
     """
-    print(path_list)
     if not delete_entry_node:
         path_list = [path[1:] for path in path_list]
     if not delete_sink_node:
         path_list = [path[:-1] for path in path_list]
-    print(path_list)
     for path in path_list:
         graph.remove_nodes_from(path)
     return graph
@@ -203,8 +201,27 @@ def select_best_path(
     :param delete_sink_node: (boolean) True->We remove the last node of a path
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    print(path_list)
+    dev = statistics.stdev(weight_avg_list)
+    # If we have different weights, choose the highest
+    if dev > 0:
+        max_weight_index = weight_avg_list.index(max(weight_avg_list))
+        best_path_index = max_weight_index
+    else:
+        length_dev = statistics.stdev(path_length)
+        # If we have different lengths, choose the longest
+        if length_dev > 0:
+            max_length_index = path_length.index(max(path_length))
+            best_path_index = max_length_index
+        # If not, choose randomly
+        else:
+            best_path_index = randint(0, len(path_list) - 1)
 
+    # Delete all paths except the best one
+    path_list.pop(best_path_index)
+    graph = remove_paths(graph, path_list, delete_entry_node, delete_sink_node)
+    return graph            
+    
 
 def path_average_weight(graph: DiGraph, path: List[str]) -> float:
     """Compute the weight of a path
@@ -376,6 +393,9 @@ def main() -> None:  # pragma: no cover
     contigs = get_contigs(graph, starting_nodes, sink_nodes)
     # Save contig info in output file
     save_contigs(contigs, output_file)
+
+
+    select_best_path(graph, [starting_nodes, sink_nodes], [1, 1], [1, 2], False, False)
     
         
     
