@@ -219,9 +219,9 @@ def select_best_path(
 
     # Delete all paths except the best one
     path_list.pop(best_path_index)
-    graph = remove_paths(graph, path_list, delete_entry_node, delete_sink_node)
-    return graph            
-    
+    remove_paths(graph, path_list, delete_entry_node, delete_sink_node)
+    return graph
+
 
 def path_average_weight(graph: DiGraph, path: List[str]) -> float:
     """Compute the weight of a path
@@ -243,7 +243,11 @@ def solve_bubble(graph: DiGraph, ancestor_node: str, descendant_node: str) -> Di
     :param descendant_node: (str) A downstream node in the graph
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    path_list = list(all_simple_paths(graph, ancestor_node, descendant_node))
+    path_lengths = [len(path) for path in path_list]
+    path_weights = [path_average_weight(graph, path) for path in path_list]
+    select_best_path(graph, path_list, path_lengths, path_weights, False, False)
+    return graph
 
 
 def simplify_bubbles(graph: DiGraph) -> DiGraph:
@@ -394,9 +398,6 @@ def main() -> None:  # pragma: no cover
     # Save contig info in output file
     save_contigs(contigs, output_file)
 
-
-    select_best_path(graph, [starting_nodes, sink_nodes], [1, 1], [1, 2], False, False)
-    
         
     
     
