@@ -256,7 +256,26 @@ def simplify_bubbles(graph: DiGraph) -> DiGraph:
     :param graph: (nx.DiGraph) A directed graph object
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    bubble = False
+    for node in graph.nodes:
+        predecessors = list(graph.predecessors(node))
+        if len(predecessors) > 1:
+            # For each couple of predecessors for each node:
+            # If we have a common ancestor, we have a bubble
+            for p1 in predecessors:
+                for p2 in predecessors:
+                    if p1 != p2:
+                        ancestor_node = lowest_common_ancestor(graph, p1, p2)
+                        if ancestor_node != None:
+                            bubble = True
+                            break
+        if bubble:
+            break
+
+    # Use recursion to go to the first bubble and solve them each
+    if bubble:
+        graph = simplify_bubbles(solve_bubble(graph, ancestor_node, node))
+    return graph
 
 
 def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
