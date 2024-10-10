@@ -215,7 +215,6 @@ def select_best_path(
         # If not, choose randomly
         else:
             best_path_index = randint(0, len(path_list) - 1)
-    print(best_path_index)
     # Delete all paths except the best one
     path_list.pop(best_path_index)
     remove_paths(graph, path_list, delete_entry_node, delete_sink_node)
@@ -265,7 +264,7 @@ def simplify_bubbles(graph: DiGraph) -> DiGraph:
                 for p2 in predecessors:
                     if p1 != p2:
                         ancestor_node = lowest_common_ancestor(graph, p1, p2)
-                        if ancestor_node != None:
+                        if ancestor_node is not None:
                             bubble = True
                             break
         if bubble:
@@ -283,7 +282,6 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
     :param starting_nodes: (list) A list of starting nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    entry_tips = False
     for node in graph.nodes:
         # Get all start nodes connected to the current node
         linked_start_nodes = []
@@ -293,7 +291,7 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
         # Break if we have an entry tip
         if len(linked_start_nodes) > 1:
             break
-    
+
     if len(linked_start_nodes) > 1:
         # Calculate all paths
         paths_to_start = []
@@ -305,7 +303,7 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
         select_best_path(graph, paths_to_start, path_lengths, path_weights, True, False)
         starting_nodes = get_starting_nodes(graph)
         solve_entry_tips(graph, starting_nodes)
-    return graph      
+    return graph
 
 
 def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
@@ -315,7 +313,29 @@ def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
     :param ending_nodes: (list) A list of ending nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    # Iterate over nodes from end to start
+    for node in reversed(list(graph.nodes)):
+        # Get all sink nodes connected to the current node
+        linked_sink_nodes = []
+        for sink_node in ending_nodes:
+            if has_path(graph, node, sink_node):
+                linked_sink_nodes.append(sink_node)
+        # Break if we have an out tip
+        if len(linked_sink_nodes) > 1:
+            break
+
+    if len(linked_sink_nodes) > 1:
+        # Calculate all paths
+        paths_to_end = []
+        for sink_node in linked_sink_nodes:
+            paths_to_end += list(all_simple_paths(graph, node, sink_node))
+        path_lengths = [len(path) for path in paths_to_end]
+        path_weights = [path_average_weight(graph, path) for path in paths_to_end]
+        # Select best path and re-calculate out nodes
+        select_best_path(graph, paths_to_end, path_lengths, path_weights, False, True)
+        ending_nodes = get_sink_nodes(graph)
+        solve_out_tips(graph, ending_nodes)
+    return graph
 
 
 def get_starting_nodes(graph: DiGraph) -> List[str]:
@@ -328,7 +348,7 @@ def get_starting_nodes(graph: DiGraph) -> List[str]:
     # Iterate on nodes
     for node in graph.nodes:
         # Keep node if no predecessors
-        if list(graph.predecessors(node)) == []:
+        if not list(graph.predecessors(node)):
             starting_nodes.append(node)
     return starting_nodes
 
@@ -343,7 +363,7 @@ def get_sink_nodes(graph: DiGraph) -> List[str]:
     # Iterate on nodes
     for node in graph.nodes:
         # Keep node if no successors
-        if list(graph.successors(node)) == []:
+        if not list(graph.successors(node)):
             sink_nodes.append(node)
     return sink_nodes
 
@@ -369,7 +389,7 @@ def get_contigs(
                     contig_len = len(contig_seq)
                     contigs.append((contig_seq, contig_len))
     return contigs
-                
+
 
 def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     """Write all contigs in fasta format
@@ -437,21 +457,12 @@ def main() -> None:  # pragma: no cover
     sink_nodes = get_sink_nodes(graph)
     # Solve tips
     graph = solve_entry_tips(graph, starting_nodes)
-    #graph = solve_out_tips(graph, sink_nodes)
+    graph = solve_out_tips(graph, sink_nodes)
 
     # Calculate contigs
     contigs = get_contigs(graph, starting_nodes, sink_nodes)
     # Save contig info in output file
     save_contigs(contigs, output_file)
-         
-    
-    graph_1 = DiGraph()
-    graph_1.add_weighted_edges_from([(1, 2, 10), (3, 2, 2), (2, 4, 15), (4, 5, 15)])
-    graph_1 = solve_entry_tips(graph_1, [1, 3])
-    print(graph_1.edges)
-    
-    
-
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
