@@ -201,7 +201,6 @@ def select_best_path(
     :param delete_sink_node: (boolean) True->We remove the last node of a path
     :return: (nx.DiGraph) A directed graph object
     """
-    print(path_list)
     dev = statistics.stdev(weight_avg_list)
     # If we have different weights, choose the highest
     if dev > 0:
@@ -216,7 +215,7 @@ def select_best_path(
         # If not, choose randomly
         else:
             best_path_index = randint(0, len(path_list) - 1)
-
+    print(best_path_index)
     # Delete all paths except the best one
     path_list.pop(best_path_index)
     remove_paths(graph, path_list, delete_entry_node, delete_sink_node)
@@ -271,7 +270,6 @@ def simplify_bubbles(graph: DiGraph) -> DiGraph:
                             break
         if bubble:
             break
-
     # Use recursion to go to the first bubble and solve them each
     if bubble:
         graph = simplify_bubbles(solve_bubble(graph, ancestor_node, node))
@@ -285,7 +283,29 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
     :param starting_nodes: (list) A list of starting nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    entry_tips = False
+    for node in graph.nodes:
+        # Get all start nodes connected to the current node
+        linked_start_nodes = []
+        for start_node in starting_nodes:
+            if has_path(graph, start_node, node):
+                linked_start_nodes.append(start_node)
+        # Break if we have an entry tip
+        if len(linked_start_nodes) > 1:
+            break
+    
+    if len(linked_start_nodes) > 1:
+        # Calculate all paths
+        paths_to_start = []
+        for start_node in linked_start_nodes:
+            paths_to_start += list(all_simple_paths(graph, start_node, node))
+        path_lengths = [len(path) for path in paths_to_start]
+        path_weights = [path_average_weight(graph, path) for path in paths_to_start]
+        # Select best path and re-calculate entry nodes
+        select_best_path(graph, paths_to_start, path_lengths, path_weights, True, False)
+        starting_nodes = get_starting_nodes(graph)
+        solve_entry_tips(graph, starting_nodes)
+    return graph      
 
 
 def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
@@ -410,16 +430,25 @@ def main() -> None:  # pragma: no cover
     kmer_dict = build_kmer_dict(fastq_file, kmer_size)
     # Build graph
     graph = build_graph(kmer_dict)
-    # Calculate contigs
+    # Explode bubbles
+    graph = simplify_bubbles(graph)
+    # Get start and end nodes
     starting_nodes = get_starting_nodes(graph)
     sink_nodes = get_sink_nodes(graph)
+    # Solve tips
+    graph = solve_entry_tips(graph, starting_nodes)
+    #graph = solve_out_tips(graph, sink_nodes)
+
+    # Calculate contigs
     contigs = get_contigs(graph, starting_nodes, sink_nodes)
     # Save contig info in output file
     save_contigs(contigs, output_file)
-
-        
+         
     
-    
+    graph_1 = DiGraph()
+    graph_1.add_weighted_edges_from([(1, 2, 10), (3, 2, 2), (2, 4, 15), (4, 5, 15)])
+    graph_1 = solve_entry_tips(graph_1, [1, 3])
+    print(graph_1.edges)
     
     
 
