@@ -427,12 +427,6 @@ def draw_graph(graph: DiGraph, graphimg_file: Path) -> None:  # pragma: no cover
     plt.savefig(graphimg_file.resolve())
 
 
-
-
-
-
-
-
 # ==============================================================
 # Main program
 # ==============================================================
@@ -458,6 +452,9 @@ def main() -> None:  # pragma: no cover
     # Solve tips
     graph = solve_entry_tips(graph, starting_nodes)
     graph = solve_out_tips(graph, sink_nodes)
+    # Recalculate start and end nodes
+    starting_nodes = get_starting_nodes(graph)
+    sink_nodes = get_sink_nodes(graph)
 
     # Calculate contigs
     contigs = get_contigs(graph, starting_nodes, sink_nodes)
